@@ -1,0 +1,37 @@
+
+# Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Local databases and logs
+*.db
+*.sqlite3
+*.log
+
+# Temporary debugging scripts
+debug_retrieval.py
+backfill_embeddings.py
+check_pgvector.py
+test_embedding_service.py
+test_embeddings.py
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
