@@ -1,185 +1,181 @@
 # AI-Powered CX Reply Assistant
 
-A prototype customer-support reply assistant for multiple brands. It
-stores brand-specific knowledge-base policies, retrieves relevant active
-policies for a conversation, drafts a reply with Gemini, and lets an
-agent edit and approve the response.
+An AI-powered customer-support reply assistant built with **React, FastAPI, PostgreSQL/pgvector, and Google Gemini**. The application supports multiple brands, retrieves relevant brand-specific policies, generates grounded customer-support reply drafts, and allows agents to edit and approve responses.
+
+## Live Demo
+
+- **Frontend:** [Open the deployed application](https://datastraw-cx-reply-assistant.vercel.app/)
+- **Backend API:** [Open the API](https://datastraw-cx-reply-assistant-api.onrender.com/)
+- **API Documentation:** [Explore the API endpoints](https://datastraw-cx-reply-assistant-api.onrender.com/docs)
+- **GitHub Repository:** [View the source code](https://github.com/ImOmkar/datastraw-cx-reply-assistant)
 
 ## Features
 
--   Multiple brands with brand-specific knowledge-base entries.
--   Create, edit, deactivate, and delete knowledge-base entries through
-    the application.
--   Customer/agent conversation view with persisted messages.
--   Semantic policy retrieval using Gemini embeddings and
-    PostgreSQL/pgvector.
--   Query rewriting and policy reranking to improve retrieval relevance.
--   AI-generated reply drafts grounded in retrieved policy context and
-    available order information.
--   Draft editing and approval, with approved response persistence.
--   Fallback behavior when no relevant policy is found.
--   Automated backend tests.
+- **Multi-brand support:** Maintain separate knowledge-base policies for different brands.
+- **Knowledge-base management:** Create, edit, deactivate, and delete policy entries.
+- **Conversation management:** View customer and agent messages with persistent conversation history.
+- **Semantic policy retrieval:** Retrieve relevant active policies using Gemini embeddings and PostgreSQL with pgvector.
+- **Query rewriting:** Refine customer queries to improve policy search relevance.
+- **Policy reranking:** Reorder retrieved candidates to prioritize relevant policy context.
+- **AI reply generation:** Generate customer-support drafts grounded in available order information and retrieved policies.
+- **Human review:** Edit and approve generated drafts before sending.
+- **Persistence:** Retain conversations, messages, and approved responses.
+- **Fallback handling:** Avoid treating unrelated or unavailable policy information as evidence.
+- **Automated tests:** Test backend functionality and important application behavior.
 
-## Technology stack
+## Technology Stack
 
--   **Frontend:** React, Vite, Tailwind CSS
--   **Backend:** Python, FastAPI, SQLAlchemy, Alembic
--   **Database:** PostgreSQL with pgvector
--   **AI:** Google Gemini for embeddings, query rewriting, reranking,
-    and reply generation
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, Tailwind CSS |
+| Backend | Python, FastAPI |
+| Database and ORM | PostgreSQL, pgvector, SQLAlchemy |
+| Migrations | Alembic |
+| AI and embeddings | Google Gemini |
+| Testing | pytest |
+
+## Architecture Overview
+
+1. The React frontend provides the conversation interface and knowledge-base management.
+2. The FastAPI backend handles conversations, policy management, retrieval, and reply generation.
+3. PostgreSQL stores application data, while pgvector supports semantic similarity search over policy embeddings.
+4. Gemini supports query rewriting, policy reranking, embedding generation, and customer-reply drafting.
+5. Retrieved policy context is supplied to the reply-generation workflow so the draft can be reviewed against the available evidence.
 
 ## Prerequisites
 
-Install the following before setup:
+For local development, install:
 
--   Python 3.12
--   Node.js and npm
--   PostgreSQL
--   A Google Gemini API key
+- Python 3.12
+- Node.js and npm
+- PostgreSQL with the pgvector extension available
+- A Google Gemini API key
 
-The local development setup described below uses PostgreSQL port `5433`.
-Change the connection string if your PostgreSQL instance uses a
-different port.
+The example database configuration below uses PostgreSQL port `5433`. Change it if your local database uses another port.
 
-## Setup
+## Local Setup
 
-### 1. Clone the repository and create a Python environment
+### 1. Clone the repository
 
-``` powershell
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd datastraw_assignment
+```powershell
+git clone https://github.com/ImOmkar/datastraw-cx-reply-assistant.git
+cd datastraw-cx-reply-assistant
+```
 
+### 2. Create and activate a Python environment
+
+```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 2. Install backend dependencies
+### 3. Install backend dependencies
 
-Use the dependency file committed with the project, if present:
+If the committed dependency file is located at `backend/requirements.txt`, run:
 
-``` powershell
-pip install -r backend\requirements.txt
+```powershell
+pip install -r backend/requirements.txt
 ```
 
-If your project keeps `requirements.txt` in a different location, use
-that path. Do not commit the virtual environment.
+### 4. Configure environment variables
 
-### 3. Configure environment variables
+Create the backend `.env` file at the location expected by the application's configuration. Configure the database connection and Gemini API key using the variable names required by the code.
 
-Create the backend `.env` file in the location read by the backend
-configuration. Use your existing local configuration as the source of
-truth. Example values:
+Example configuration:
 
-``` dotenv
+```dotenv
 DATABASE_URL=postgresql+psycopg://<DB_USER>:<DB_PASSWORD>@localhost:5433/datastraw_cx
 GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>
-GEMINI_MODEL=gemini-3.6-flash
+GEMINI_MODEL=<MODEL_CONFIGURED_BY_THE_APPLICATION>
 ```
 
-Do not commit `.env`, API keys, database passwords, or other secrets.
-The embedding model configured by the application is
-`gemini-embedding-001`.
+The embedding model configured by the application is `gemini-embedding-001`.
 
-### 4. Create the database and run migrations
+Use the actual model name and environment-variable names from the project configuration. Do not commit API keys, passwords, or `.env` files.
 
-Create a PostgreSQL database named `datastraw_cx` (or update
-`DATABASE_URL` to match your database). From the repository root,
-activate the virtual environment and run:
+### 5. Create the database and apply migrations
 
-``` powershell
-python -m alembic -c backend\alembic.ini upgrade head
+Create the PostgreSQL database and ensure the required pgvector extension is available. Update `DATABASE_URL` to match your local configuration.
+
+Apply migrations using the Alembic configuration committed with the project. For example, if `backend/alembic.ini` is configured to work from the repository root:
+
+```powershell
+python -m alembic -c backend/alembic.ini upgrade head
 ```
 
-If Alembic is configured to be run from the backend directory in your
-checkout, run the project's existing migration command from that
-directory instead. Confirm the migration configuration path before
-running it.
+Use this command only if it matches the repository's actual Alembic configuration.
 
-### 5. Start the backend
+### 6. Start the backend
 
-From the repository root, with the virtual environment active:
+From the repository root, activate the virtual environment and run the project's configured FastAPI application entry point. For example, if the module path is `backend.app.main`:
 
-``` powershell
+```powershell
 python -m uvicorn backend.app.main:app --reload
 ```
 
-The API should be available at `http://127.0.0.1:8000`; interactive API
-documentation is at `http://127.0.0.1:8000/docs`.
+The API is then typically available at:
 
-### 6. Install and start the frontend
+- API: `http://127.0.0.1:8000`
+- Interactive API documentation: `http://127.0.0.1:8000/docs`
 
-Open a second PowerShell terminal:
+### 7. Start the frontend
 
-``` powershell
+Open a second terminal:
+
+```powershell
 cd frontend
 npm install
 ```
 
-Create `frontend/.env` if needed:
+Configure `VITE_API_BASE_URL` in `frontend/.env` if the frontend uses this variable:
 
-``` dotenv
+```dotenv
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Then start the frontend:
+Start the development server:
 
-``` powershell
+```powershell
 npm run dev
 ```
 
-Open the local URL printed by Vite, normally `http://localhost:5173`.
+Open the local URL printed by Vite, typically `http://localhost:5173`.
 
-## Run tests
+## Running Tests
 
-From the repository root, activate the backend virtual environment and
-run:
+Activate the backend virtual environment and run the test suite using the project's configured test paths:
 
-``` powershell
+```powershell
 python -m pytest -v
 ```
 
-Use the test suite as the first verification step after changing
-retrieval, reply-generation, or persistence logic.
+Run the tests after changes to policy retrieval, reply generation, database persistence, or other critical application behavior.
 
-## Suggested manual smoke test
+## Manual Verification
 
-1.  Open a conversation for a brand and send a customer message about a
-    damaged item.
-2.  Generate a reply and inspect the retrieved policy context.
-3.  Confirm the retrieved policies belong to the selected brand and are
-    relevant to the current message.
-4.  Try an unrelated request and verify the application does not invent
-    a policy when no relevant entry exists.
-5.  Edit the generated draft and approve it.
-6.  Refresh the page and verify the conversation and approved response
-    persist.
-7.  Repeat a relevant scenario for a second brand and check that its
-    distinct policy terms are used.
+Use the following checks to verify the main workflows:
 
-## Important limitations
+1. Open a conversation associated with a brand and submit a customer question about a damaged item.
+2. Generate a reply and inspect the retrieved policy context.
+3. Verify that retrieved policies belong to the selected brand and are relevant to the current request.
+4. Submit an unrelated request and check that irrelevant policies are not treated as evidence.
+5. Edit the generated draft and approve it.
+6. Refresh the application and verify that the conversation and approved response persist.
+7. Repeat a relevant scenario for another brand and verify that its distinct policy terms are used.
 
--   This is an assignment prototype, not a production-ready
-    customer-support system.
--   AI-generated query rewriting, reranking, and replies are
-    probabilistic and must be evaluated against a representative test
-    set.
--   The retrieval threshold and number of candidate policies are
-    configuration choices that should be validated with real data.
--   Production deployment should add authentication and authorization,
-    stronger tenant isolation controls, structured logging, rate limits,
-    secret management, monitoring, retry/idempotency handling, and a
-    human-review workflow for sensitive decisions.
--   Do not treat a generated reply as authorization to issue a refund or
-    replacement. Agents should verify the policy and order facts before
-    sending.
+## Limitations and Future Improvements
 
-## Repository hygiene before submission
+This project is an assignment prototype and is not intended to be a production-ready customer-support system.
 
--   Commit source code, migrations, tests, and a sanitized
-    `.env.example`.
--   Ensure `.env`, credentials, database files, `.venv`, `node_modules`,
-    build output, and debug artifacts are excluded from Git.
--   Replace this README's repository URL placeholder with the actual
-    repository URL.
--   Verify the setup instructions from a clean checkout before
-    submitting.
+- Query rewriting, policy reranking, and reply generation are probabilistic and require evaluation against representative test cases.
+- Retrieval thresholds and candidate counts should be tuned using real-world data.
+- Production deployment would require authentication and authorization, stronger tenant-isolation controls, structured logging, rate limiting, secure secret management, monitoring, and robust retry and idempotency handling.
+- Sensitive or ambiguous cases should be escalated for human review.
+- A generated reply must not be treated as authorization to issue a refund or replacement. Agents should verify the applicable policy and order information before sending a response.
+
+## Security and Repository Hygiene
+
+- Keep API keys, passwords, and other secrets out of source control.
+- Commit source code, database migrations, tests, and a sanitized `.env.example`.
+- Exclude `.env` files, virtual environments, `node_modules`, database files, build output, and temporary debug artifacts from Git.
+- Document the required environment variables without including their secret values.
