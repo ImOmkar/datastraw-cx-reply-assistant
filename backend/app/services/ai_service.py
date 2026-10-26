@@ -91,7 +91,6 @@ def rerank_policies(
                 max_output_tokens=150,
             ),
         )
-
         policy_ids = [
             int(value.strip())
             for value in (response.text or "").split(",")
