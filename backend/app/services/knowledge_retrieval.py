@@ -10,7 +10,6 @@ from backend.app.services.embedding_service import generate_embedding
 from backend.app.services.ai_service import rewrite_query, rerank_policies
 
 # Cosine distance ranges from 0 (identical direction) upward.
-# Start conservatively; we'll calibrate this using real test queries.
 MAX_COSINE_DISTANCE = 0.42
 
 
