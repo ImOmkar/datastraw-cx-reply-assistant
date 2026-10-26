@@ -132,7 +132,7 @@ function App() {
 
         setConversations(mappedConversations)
         setApiStatus(
-          `Connected — ${mappedConversations.length} conversations loaded`,
+          `Connected - ${mappedConversations.length} conversations loaded`,
         )
       } catch (error) {
         console.error('Failed to load workspace data:', error)
