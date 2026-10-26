@@ -28,9 +28,6 @@ def retrieve_relevant_knowledge(
         return []
 
     search_query = rewrite_query(customer_message)
-    
-    print(f"[RETRIEVAL] Brand ID: {conversation.brand_id}")
-    print(f"[RETRIEVAL] Search query: {search_query!r}")
 
     query_embedding = generate_embedding(
         search_query,
@@ -54,11 +51,6 @@ def retrieve_relevant_knowledge(
 
     results = db.execute(statement).all()
     
-    print(
-        "[RETRIEVAL] Candidate distances:",
-        [(entry.id, entry.title, round(float(distance), 4))
-        for entry, distance in results],
-    )
 
     relevant_entries = [
         entry
@@ -66,10 +58,6 @@ def retrieve_relevant_knowledge(
         if cosine_distance <= MAX_COSINE_DISTANCE
     ]
     
-    print(
-        "[RETRIEVAL] Passed threshold:",
-        [(entry.id, entry.title) for entry in relevant_entries],
-    )
 
     if not relevant_entries:
         return []
@@ -86,15 +74,13 @@ def retrieve_relevant_knowledge(
 
     reranked_policies = rerank_policies(search_query, policies)
     
-    print(
-        "[RETRIEVAL] Reranked policy IDs:",
-        [policy["id"] for policy in reranked_policies],
-    )
-    
-    selected_ids = {policy["id"] for policy in reranked_policies}
+    entries_by_id = {
+        entry.id: entry
+        for entry in relevant_entries
+    }
 
     return [
-        entry
-        for entry in relevant_entries
-        if entry.id in selected_ids
+        entries_by_id[policy["id"]]
+        for policy in reranked_policies
+        if policy["id"] in entries_by_id
     ]

@@ -54,6 +54,8 @@ def rewrite_query(customer_message: str, conversation_history: str = "") -> str:
     except Exception:
         return customer_message
 
+
+
 def rerank_policies(
     query: str,
     policies: list[dict],
@@ -62,24 +64,31 @@ def rerank_policies(
         return []
 
     prompt = f"""
-    Select only policies directly relevant to answering the customer query.
-
-    Exclude policies that mention an unrelated topic.
-    Keep policies that provide necessary eligibility, deadline, evidence,
-    refund, or return conditions for the actual issue.
-    Return only the IDs of relevant policies, ordered from most to least
-    relevant, as a comma-separated list.
-    Return an empty response if none are relevant.
+    You are selecting knowledge-base policies for a customer-support reply.
 
     Customer query:
     {query}
 
-    Policies:
+    Candidate policies:
     {chr(10).join(
         f"ID: {p['id']} | Category: {p['category']} | "
         f"Title: {p['title']} | Content: {p['content']}"
         for p in policies
     )}
+
+    Instructions:
+    - Identify each distinct issue or question in the customer query.
+    - Select every candidate policy needed to answer those issues.
+    - If the query asks about both returns and refunds, select every
+      directly relevant returns policy and refund policy.
+    - Include relevant eligibility, deadline, evidence, and inspection
+      conditions.
+    - Exclude policies that address unrelated issues.
+    - Never select a policy for a different brand; only the candidates
+      provided here are available.
+    - Return only the selected candidate IDs, ordered by relevance,
+      separated by commas.
+    - Return an empty response only if none of the candidates are relevant.
     """
 
     try:
@@ -91,23 +100,23 @@ def rerank_policies(
                 max_output_tokens=150,
             ),
         )
-        policy_ids = [
-            int(value.strip())
-            for value in (response.text or "").split(",")
-            if value.strip().isdigit()
-        ]
+
         by_id = {policy["id"]: policy for policy in policies}
+        selected_ids = []
 
-        return [
-            by_id[policy_id]
-            for policy_id in policy_ids
-            if policy_id in by_id
-        ]
+        for value in (response.text or "").split(","):
+            value = value.strip()
+            if value.isdigit():
+                policy_id = int(value)
+                if policy_id in by_id and policy_id not in selected_ids:
+                    selected_ids.append(policy_id)
+
+        return [by_id[policy_id] for policy_id in selected_ids]
+
     except Exception:
-
         return policies
 
-        
+
 def generate_reply(
     customer_message: str,
     brand_name: str,
