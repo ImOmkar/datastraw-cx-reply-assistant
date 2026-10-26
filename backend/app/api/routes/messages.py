@@ -75,3 +75,41 @@ def list_messages(
         .order_by(Message.created_at, Message.id)
         .all()
     )
+
+
+
+
+@router.delete(
+    "/{message_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_message(
+    conversation_id: int,
+    message_id: int,
+    db: Session = Depends(get_db),
+):
+    conversation = db.query(Conversation).filter(
+        Conversation.id == conversation_id
+    ).first()
+
+    if conversation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found.",
+        )
+
+    message = db.query(Message).filter(
+        Message.id == message_id,
+        Message.conversation_id == conversation_id,
+    ).first()
+
+    if message is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found in this conversation.",
+        )
+
+    db.delete(message)
+    db.commit()
+
+    return None
