@@ -179,3 +179,9 @@ This project is an assignment prototype and is not intended to be a production-r
 - Commit source code, database migrations, tests, and a sanitized `.env.example`.
 - Exclude `.env` files, virtual environments, `node_modules`, database files, build output, and temporary debug artifacts from Git.
 - Document the required environment variables without including their secret values.
+
+### Deployment Notice
+
+The backend is hosted on Render's free tier, which may spin down after 15 minutes of inactivity. As a result, the first API request after a period of inactivity may take some time while the service starts up. Subsequent requests should be faster once the service is running.
+
+If the application appears unresponsive on your first visit, please allow a little time for the backend to wake up and try again.
